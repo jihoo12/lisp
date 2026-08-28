@@ -273,6 +273,24 @@ pub enum Op {
     /// The VM implements this by re-wrapping the current frame's `chunk` +
     /// `params` into a fresh `VmValue::Closure` and storing it under `name`.
     StoreSelf(String),
+
+    // ── Inline arithmetic (JIT fast-path) ──────────────────────────────────
+    /// Pop two numbers, add them, push the result.
+    /// Supports Int+Int→Int, Int+Float→Float, Float+Float→Float.
+    NumAdd,
+    /// Pop two numbers, subtract (second-from-top − top), push result.
+    NumSub,
+    /// Pop two numbers, multiply, push result.
+    NumMul,
+    /// Pop two numbers, divide (second-from-top ÷ top), push result.
+    NumDiv,
+    /// Pop two values, push Bool(top-of-stack equality).
+    /// Numbers compare by value; strings by content; identity for others.
+    NumEq,
+    /// Pop two numbers, push Bool(second-from-top < top).
+    NumLt,
+    /// Pop two numbers, push Bool(second-from-top > top).
+    NumGt,
 }
 
 // ── Chunk ────────────────────────────────────────────────────────────────────

@@ -1000,9 +1000,9 @@ fn compile_lambda(
 /// Compile a function call `(func arg...)`.
 ///
 /// Strategy:
-/// 1. Compile the function expression (push the callee).
-/// 2. Compile each argument left-to-right (push args).
-/// 3. Emit `TailCall(n)` if in tail position, else `Call(n)`.
+/// 1. If the callee is a known arithmetic/comparison builtin and n_args == 2,
+///    emit a specialized `NumAdd`/`NumSub`/etc opcode (no function call overhead).
+/// 2. Otherwise compile the function expression (push callee), compile args, emit Call/TailCall.
 fn compile_call(
     list: &[Expr],
     chunk: &mut Chunk,
@@ -1012,6 +1012,35 @@ fn compile_call(
 ) -> Result<(), String> {
     let n_args = list.len() - 1;
 
+    // Try to emit an inline arithmetic opcode for known 2-arg builtins.
+    if n_args == 2 {
+        if let Expr::Symbol(name) = &list[0] {
+            let inline_op = match name.as_str() {
+                "+" => Some(Op::NumAdd),
+                "-" => Some(Op::NumSub),
+                "*" => Some(Op::NumMul),
+                "/" => Some(Op::NumDiv),
+                "=" => Some(Op::NumEq),
+                "<" => Some(Op::NumLt),
+                ">" => Some(Op::NumGt),
+                _ => None,
+            };
+            if let Some(op) = inline_op {
+                // Only inline if both args are simple (to avoid double-evaluation).
+                // If args could have side effects, they'd still evaluate correctly
+                // since we compile them in order — but let's be conservative and
+                // skip inlining if either arg is a complex call.
+                if is_simple_for_inline(&list[1]) && is_simple_for_inline(&list[2]) {
+                    compile_expr(&list[1], chunk, heap, env, false)?;
+                    compile_expr(&list[2], chunk, heap, env, false)?;
+                    chunk.emit(op);
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    // Fallback: general function call.
     // Compile the callee.
     compile_expr(&list[0], chunk, heap, env, false)?;
 
@@ -1026,6 +1055,20 @@ fn compile_call(
         chunk.emit(Op::Call(n_args));
     }
     Ok(())
+}
+
+/// Returns true if `expr` is cheap enough to evaluate twice (for inlining).
+/// We inline when both args are constants, variables, or other simple expressions.
+/// We avoid inlining when an arg is a function call (to prevent double execution).
+fn is_simple_for_inline(expr: &Expr) -> bool {
+    match expr {
+        Expr::Int(_) | Expr::Float(_) | Expr::Bool(_) | Expr::Symbol(_) => true,
+        Expr::List(items) if !items.is_empty() => {
+            // Function calls and other complex forms are NOT simple
+            false
+        }
+        _ => false,
+    }
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────

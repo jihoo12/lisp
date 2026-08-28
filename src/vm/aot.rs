@@ -98,6 +98,13 @@ impl Writer {
             Op::PopEnv => { self.w_u8(16); }
             Op::StoreSelf(s) => { self.w_u8(17); self.w_str(s); }
             Op::AssignVar(s) => { self.w_u8(18); self.w_str(s); }
+            Op::NumAdd => { self.w_u8(19); }
+            Op::NumSub => { self.w_u8(20); }
+            Op::NumMul => { self.w_u8(21); }
+            Op::NumDiv => { self.w_u8(22); }
+            Op::NumEq => { self.w_u8(23); }
+            Op::NumLt => { self.w_u8(24); }
+            Op::NumGt => { self.w_u8(25); }
         }
         Ok(())
     }
@@ -251,6 +258,13 @@ impl<'a> Reader<'a> {
             16 => Ok(Op::PopEnv),
             17 => { let s = self.r_str()?; Ok(Op::StoreSelf(s)) }
             18 => { let s = self.r_str()?; Ok(Op::AssignVar(s)) }
+            19 => Ok(Op::NumAdd),
+            20 => Ok(Op::NumSub),
+            21 => Ok(Op::NumMul),
+            22 => Ok(Op::NumDiv),
+            23 => Ok(Op::NumEq),
+            24 => Ok(Op::NumLt),
+            25 => Ok(Op::NumGt),
             _ => Err(format!("Unknown Op tag: {}", tag)),
         }
     }

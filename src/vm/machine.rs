@@ -180,6 +180,30 @@ fn into_value(v: VmValue) -> Result<Value, String> {
     }
 }
 
+fn into_num(v: &VmValue) -> Result<f64, String> {
+    match v {
+        VmValue::Int(n) => Ok(*n as f64),
+        VmValue::Float(n) => Ok(*n),
+        VmValue::Bool(b) => Ok(if *b { 1.0 } else { 0.0 }),
+        VmValue::Nil => Ok(0.0),
+        other => Err(format!("expected number, got {:?}", other)),
+    }
+}
+
+fn vm_value_eq(a: &VmValue, b: &VmValue) -> bool {
+    match (a, b) {
+        (VmValue::Int(x), VmValue::Int(y)) => x == y,
+        (VmValue::Int(x), VmValue::Float(y)) => (*x as f64) == *y,
+        (VmValue::Float(x), VmValue::Int(y)) => *x == (*y as f64),
+        (VmValue::Float(x), VmValue::Float(y)) => x == y,
+        (VmValue::Bool(x), VmValue::Bool(y)) => x == y,
+        (VmValue::Nil, VmValue::Nil) => true,
+        (VmValue::Str(x), VmValue::Str(y)) => x == y,
+        (VmValue::Symbol(x), VmValue::Symbol(y)) => x == y,
+        _ => false,
+    }
+}
+
 /// Convert a `VmValue` to an `Expr` for the interpreter boundary.
 pub fn vm_value_to_expr(v: VmValue, _heap: &mut Heap) -> Result<Expr, String> {
     match v {
@@ -290,7 +314,7 @@ pub struct CallFrame {
 /// it is not meant to be reused across top-level evaluations.
 pub struct VM<'h> {
     /// The operand / value stack.
-    stack: Vec<VmValue>,
+    pub(crate) stack: Vec<VmValue>,
     /// The call-frame stack.  The innermost (most-recently-pushed) frame is
     /// `frames.last_mut()`.
     pub(crate) frames: Vec<CallFrame>,
@@ -520,6 +544,86 @@ impl<'h> VM<'h> {
                     env_set(self.heap, env, name, expr);
                 }
 
+                // ── Inline arithmetic (NumAdd, NumSub, NumMul, NumDiv) ───
+                Op::NumAdd => {
+                    let b = self.pop()?;
+                    let a = self.pop()?;
+                    match (&a, &b) {
+                        (VmValue::Int(x), VmValue::Int(y)) => {
+                            self.stack.push(VmValue::Int(x.wrapping_add(*y)));
+                        }
+                        _ => {
+                            let af = into_num(&a)?;
+                            let bf = into_num(&b)?;
+                            self.stack.push(VmValue::Float(af + bf));
+                        }
+                    }
+                }
+                Op::NumSub => {
+                    let b = self.pop()?;
+                    let a = self.pop()?;
+                    match (&a, &b) {
+                        (VmValue::Int(x), VmValue::Int(y)) => {
+                            self.stack.push(VmValue::Int(x.wrapping_sub(*y)));
+                        }
+                        _ => {
+                            let af = into_num(&a)?;
+                            let bf = into_num(&b)?;
+                            self.stack.push(VmValue::Float(af - bf));
+                        }
+                    }
+                }
+                Op::NumMul => {
+                    let b = self.pop()?;
+                    let a = self.pop()?;
+                    match (&a, &b) {
+                        (VmValue::Int(x), VmValue::Int(y)) => {
+                            self.stack.push(VmValue::Int(x.wrapping_mul(*y)));
+                        }
+                        _ => {
+                            let af = into_num(&a)?;
+                            let bf = into_num(&b)?;
+                            self.stack.push(VmValue::Float(af * bf));
+                        }
+                    }
+                }
+                Op::NumDiv => {
+                    let b = self.pop()?;
+                    let a = self.pop()?;
+                    let af = into_num(&a)?;
+                    let bf = into_num(&b)?;
+                    if bf == 0.0 {
+                        return Err("division by zero".into());
+                    }
+                    if let (VmValue::Int(x), VmValue::Int(y)) = (&a, &b) {
+                        if y != &0 && x % y == 0 {
+                            self.stack.push(VmValue::Int(x / y));
+                            continue;
+                        }
+                    }
+                    self.stack.push(VmValue::Float(af / bf));
+                }
+                Op::NumEq => {
+                    let b = self.pop()?;
+                    let a = self.pop()?;
+                    let result = vm_value_eq(&a, &b);
+                    self.stack.push(VmValue::Bool(result));
+                }
+                Op::NumLt => {
+                    let b = self.pop()?;
+                    let a = self.pop()?;
+                    let af = into_num(&a)?;
+                    let bf = into_num(&b)?;
+                    self.stack.push(VmValue::Bool(af < bf));
+                }
+                Op::NumGt => {
+                    let b = self.pop()?;
+                    let a = self.pop()?;
+                    let af = into_num(&a)?;
+                    let bf = into_num(&b)?;
+                    self.stack.push(VmValue::Bool(af > bf));
+                }
+
                 // ── Call ─────────────────────────────────────────────────────
                 Op::Call(n_args) => {
                     self.do_call(n_args, /*tail=*/ false)?;
@@ -582,7 +686,7 @@ impl<'h> VM<'h> {
     ///
     /// For a normal `Call`, a new `CallFrame` is pushed.
     /// For a `TailCall`, the current frame is updated in place (no new frame).
-    fn do_call(&mut self, n_args: usize, tail: bool) -> Result<(), String> {
+    pub(crate) fn do_call(&mut self, n_args: usize, tail: bool) -> Result<(), String> {
         let stack_len = self.stack.len();
         if stack_len < n_args + 1 {
             return Err(format!(
@@ -696,7 +800,8 @@ impl<'h> VM<'h> {
         &mut self,
         fp: unsafe extern "C" fn(*mut crate::vm::jit_abi::JitFrame),
     ) -> Result<VmValue, String> {
-        let mut frame = crate::vm::jit_abi::JitFrame::new(self);
+        let chunk = Rc::clone(&self.frames[0].chunk);
+        let mut frame = crate::vm::jit_abi::JitFrame::new(self, &chunk);
         unsafe { fp(&mut frame) };
         frame.into_vm_value()
     }
