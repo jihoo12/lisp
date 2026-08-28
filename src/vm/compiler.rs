@@ -102,10 +102,6 @@ impl Compiler {
 /// are recursively expanded.  Atoms are returned unchanged.
 fn expand_all(expr: &Expr, env: crate::expr::Env, heap: &mut Heap) -> Result<Expr, String> {
     match expr {
-        // A CubicalTerm anywhere in the tree makes the whole thing uncompilable.
-        Expr::CubicalTerm(_) => Err("uncompilable: CubicalTerm".into()),
-
-        // Atoms — nothing to expand.
         Expr::Int(_) | Expr::Float(_) | Expr::Complex(_, _) | Expr::Bool(_) | Expr::Str(_)
         | Expr::Symbol(_) => Ok(expr.clone()),
 
@@ -183,9 +179,6 @@ fn compile_expr(
     tail: bool,
 ) -> Result<(), String> {
     match expr {
-        // ── CubicalTerm ───────────────────────────────────────────────────────
-        Expr::CubicalTerm(_) => Err("uncompilable: CubicalTerm".into()),
-
         // ── self-evaluating atoms ─────────────────────────────────────────────
         Expr::Int(n) => {
             chunk.emit(Op::LoadConst(Value::Int(*n)));
@@ -1017,13 +1010,6 @@ fn compile_call(
     env: crate::expr::Env,
     tail: bool,
 ) -> Result<(), String> {
-    // Reject CubicalTerm in any position.
-    for e in list {
-        if contains_cubical(e) {
-            return Err("uncompilable: CubicalTerm".into());
-        }
-    }
-
     let n_args = list.len() - 1;
 
     // Compile the callee.
@@ -1044,21 +1030,7 @@ fn compile_call(
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-/// Returns `true` if `expr` contains a `CubicalTerm` anywhere in its tree.
-fn contains_cubical(expr: &Expr) -> bool {
-    match expr {
-        Expr::CubicalTerm(_) => true,
-        Expr::List(items) => items.iter().any(contains_cubical),
-        Expr::Lambda(_, body, _) => contains_cubical(body),
-        Expr::Macro(_, body) => contains_cubical(body),
-        _ => false,
-    }
-}
-
 fn is_compilable_rec(expr: &Expr, qq_depth: usize, heap: &Heap, env: GcHandle) -> bool {
-    if contains_cubical(expr) {
-        return false;
-    }
     match expr {
         Expr::Int(_) | Expr::Float(_) | Expr::Complex(_, _) | Expr::Bool(_) => true,
         Expr::Str(_) => true,
@@ -1071,7 +1043,7 @@ fn is_compilable_rec(expr: &Expr, qq_depth: usize, heap: &Heap, env: GcHandle) -
         }
         Expr::Func(_) => true,
         Expr::Lambda(_, body, env) => is_compilable_rec(body, qq_depth, heap, *env),
-        Expr::Macro(..) | Expr::CubicalTerm(_) => false,
+        Expr::Macro(..) => false,
         Expr::List(items) => {
             if items.is_empty() {
                 return true;

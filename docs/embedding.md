@@ -112,7 +112,6 @@ pub enum Expr {
     Func(BuiltinFn),
     Lambda(Vec<String>, Box<Expr>, GcHandle),
     Macro(Vec<String>, Box<Expr>),
-    CubicalTerm(Box<CubicalTerm>),
 }
 ```
 
@@ -161,7 +160,6 @@ All internal modules are public and can be used independently:
 | `pilisp::builtins` | `global_env` | Global environment factory |
 | `pilisp::vm` | `vm_eval`, `aot_compile_file`, `cache_stats` | Bytecode VM and AOT |
 | `pilisp::macros` | `expand_macro`, `eval_quasiquote` | Macro expansion |
-| `pilisp::cubical` | `run`, `transpile`, `run_str` | Cubical type theory |
 
 ### Custom environments
 
@@ -221,28 +219,6 @@ Load cached bytecode at startup:
 
 ```rust
 vm::aot_load_file("output.aot").unwrap();
-```
-
----
-
-## Running cubical files
-
-```rust
-use pilisp::cubical;
-
-let output = cubical::run("my_file.pic").unwrap();
-println!("{} : {} = {}", output.name, output.ty, output.value);
-```
-
-Or evaluate cubical source from a string:
-
-```rust
-let output = cubical::run_str("
-  data Bool = | true : Bool | false : Bool
-  def not : Bool -> Bool = \\b. match b return Bool with
-    | true => false
-    | false => true
-").unwrap();
 ```
 
 ---

@@ -48,9 +48,6 @@ pub enum Expr {
     ///   the GC keeps this frame alive as long as the `Lambda` is reachable.
     Lambda(Vec<String>, Box<Expr>, GcHandle),
     Macro(Vec<String>, Box<Expr>),
-    /// A fully opaque cubical type theory term, injected by the cubical
-    /// builtins and consumed by `ctt-eval`, `ctt-infer`, and `ctt-check`.
-    CubicalTerm(Box<crate::cubical::syntax::Term>),
 }
 
 impl fmt::Debug for Expr {
@@ -85,7 +82,6 @@ impl fmt::Debug for Expr {
             Expr::Func(_) => write!(f, "<builtin>"),
             Expr::Lambda(..) => write!(f, "<lambda>"),
             Expr::Macro(..) => write!(f, "<macro>"),
-            Expr::CubicalTerm(t) => write!(f, "<cubical:{}>", t),
         }
     }
 }
@@ -98,7 +94,6 @@ pub fn is_truthy(e: &Expr) -> bool {
         Expr::Complex(_, _) => true,
         Expr::Str(s) => !s.is_empty(),
         Expr::List(l) => !l.is_empty(),
-        Expr::CubicalTerm(_) => true,
         _ => true,
     }
 }

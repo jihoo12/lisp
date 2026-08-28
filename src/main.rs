@@ -1,9 +1,8 @@
 use std::fs;
 use std::io::{self, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process;
 
-use pilisp::cubical;
 use pilisp::eval::{eval, with_import_base};
 use pilisp::gc::{GcHandle, Heap};
 use pilisp::reader::parse_all;
@@ -106,17 +105,13 @@ fn main() {
     if args.len() < 2 {
         repl(global_env, &mut heap);
     } else if args[1] == "--help" || args[1] == "-h" {
-        println!("pi-lisp \u{2014} a Lisp interpreter with cubical type theory and AOT compilation");
+        println!("pi-lisp \u{2014} a Lisp interpreter with AOT compilation");
         println!();
         println!("USAGE:");
         println!("  pilisp                         Start the REPL");
         println!("  pilisp <file.pi>               Evaluate a Lisp source file");
-        println!("  pilisp <file.pic>              Run a cubical type theory file");
-        println!("  pilisp --cubical <file.pic>    Explicit cubical mode");
         println!("  pilisp --aot <file.pi>         AOT-compile to <file>.aot");
         println!("  pilisp --aot <file.pi> -o <f>  AOT-compile to <f>");
-        println!("  pilisp --cubical-transpile <file.pic> [-o <dir>]     Transpile cubical to Python");
-        println!("  pilisp --cubical-transpile-rust <file.pic> [-o <dir>] Transpile cubical to Rust");
         println!("  pilisp --help                  Show this help");
         println!();
         println!("When a .pi file is run, pilisp auto-loads <file>.aot if it exists");
@@ -149,123 +144,9 @@ fn main() {
                     Err(e) => eprintln!("AOT compile error: {}", e),
                 }
                 return;
-            } else if args[i] == "--cubical" {
-                i += 1;
-                if i >= args.len() {
-                    eprintln!("Error: --cubical requires a filename argument");
-                    process::exit(1);
-                }
-                match cubical::run(&args[i]) {
-                    Ok(output) => println!("{}", output),
-                    Err(err) => eprintln!("Cubical error: {}", err),
-                }
-            } else if args[i] == "--cubical-transpile" {
-                i += 1;
-                if i >= args.len() {
-                    eprintln!("Error: --cubical-transpile requires a filename argument");
-                    process::exit(1);
-                }
-                let input_path = Path::new(&args[i]);
-                let mut out_dir = input_path
-                    .parent()
-                    .unwrap_or_else(|| Path::new("."))
-                    .to_path_buf();
-                i += 1;
-                if i < args.len() && args[i] == "-o" {
-                    i += 1;
-                    if i >= args.len() {
-                        eprintln!("Error: -o requires an output directory argument");
-                        process::exit(1);
-                    }
-                    out_dir = PathBuf::from(&args[i]);
-                }
-                match cubical::transpile(input_path) {
-                    Ok(output) => {
-                        if let Err(err) = cubical::write_output(&output, &out_dir) {
-                            eprintln!("Transpile write error: {}", err);
-                            process::exit(1);
-                        }
-                        for module in &output.modules {
-                            println!(
-                                "wrote {}",
-                                out_dir
-                                    .join(module.path.file_name().unwrap_or_default())
-                                    .display()
-                            );
-                        }
-                        if output
-                            .modules
-                            .iter()
-                            .any(|m| m.path.file_stem().and_then(|s| s.to_str()) == Some("Main"))
-                        {
-                            println!(
-                                "run: cd {} && python main.py",
-                                out_dir.display()
-                            );
-                        }
-                    }
-                    Err(err) => {
-                        eprintln!("Transpile error: {}", err);
-                        process::exit(1);
-                    }
-                }
-            } else if args[i] == "--cubical-transpile-rust" {
-                i += 1;
-                if i >= args.len() {
-                    eprintln!("Error: --cubical-transpile-rust requires a filename argument");
-                    process::exit(1);
-                }
-                let input_path = Path::new(&args[i]);
-                let mut out_dir = input_path
-                    .parent()
-                    .unwrap_or_else(|| Path::new("."))
-                    .to_path_buf();
-                i += 1;
-                if i < args.len() && args[i] == "-o" {
-                    i += 1;
-                    if i >= args.len() {
-                        eprintln!("Error: -o requires an output directory argument");
-                        process::exit(1);
-                    }
-                    out_dir = PathBuf::from(&args[i]);
-                }
-                match cubical::transpile_rust(input_path) {
-                    Ok(output) => {
-                        if let Err(err) = cubical::write_output(&output, &out_dir) {
-                            eprintln!("Transpile write error: {}", err);
-                            process::exit(1);
-                        }
-                        for module in &output.modules {
-                            println!(
-                                "wrote {}",
-                                out_dir
-                                    .join(module.path.file_name().unwrap_or_default())
-                                    .display()
-                            );
-                        }
-                        println!(
-                            "run: cd {} && rustc main.rs && ./main",
-                            out_dir.display()
-                        );
-                    }
-                    Err(err) => {
-                        eprintln!("Transpile error: {}", err);
-                        process::exit(1);
-                    }
-                }
             } else {
                 let file_path = &args[i];
                 let path = Path::new(file_path);
-
-                // Auto-detect .pic files and route to cubical mode
-                if path.extension().and_then(|s| s.to_str()) == Some("pic") {
-                    match cubical::run(file_path) {
-                        Ok(output) => println!("{}", output),
-                        Err(err) => eprintln!("Cubical error: {}", err),
-                    }
-                    i += 1;
-                    continue;
-                }
 
                 // Reject .aot files as direct input
                 if path.extension().and_then(|s| s.to_str()) == Some("aot") {

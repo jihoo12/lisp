@@ -175,7 +175,6 @@ Returns the class name (as a symbol) of any value.
 | CLOS instance | *class name* |
 | Function / Lambda | `function` |
 | Macro | `macro` |
-| Cubical term | `cubical-term` |
 
 ### `subtypep`
 

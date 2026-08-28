@@ -244,7 +244,6 @@ pub fn expr_to_vm_value(expr: &Expr, heap: &mut Heap) -> Result<VmValue, String>
             })
         }
         Expr::Macro(..) => Err("uncompilable: Macro".into()),
-        Expr::CubicalTerm(_) => Err("uncompilable: CubicalTerm".into()),
     }
 }
 

@@ -2,10 +2,10 @@
 title: pi-lisp
 sidebar:
   order: 0
-description: A tiny Lisp in Rust for playful experiments with cubical type theory, dependent types, and native x86-64 assembly.
+description: A tiny Lisp in Rust for playful experiments with macros, lexical scoping, native x86-64 assembly, and a CLOS object system.
 template: splash
 hero:
-  tagline: A small experimental Lisp where S-expressions can wander into intervals, paths, Π-types, Σ-types, Glue types, and native assembly.
+  tagline: A small experimental Lisp where S-expressions can wander into lambdas, macros, native assembly, and a CLOS object system.
   image:
     file: ../../assets/lispy.png
     alt: Lispy, the pi-lisp cat mascot, wearing a purple bandana with a parenthesis symbol, saying UWU
@@ -29,11 +29,11 @@ import lispyImg from '../../assets/lispy.png';
 
 <section class="landing-intro" aria-label="pi-lisp overview">
   <div class="intro-copy">
-    <p class="eyebrow">Rust interpreter · Lisp reader · cubical playground</p>
+    <p class="eyebrow">Rust interpreter · Lisp reader · AOT compiler</p>
     <h2>Small syntax for strange, precise ideas.</h2>
     <p>
       pi-lisp is a compact Lisp interpreter for exploring ordinary S-expressions,
-      evaluator mechanics, cubical type theory primitives, and a native assembly
+      evaluator mechanics, AOT compilation, and a native assembly
       escape hatch from one playful language surface.
     </p>
   </div>
@@ -46,13 +46,7 @@ import lispyImg from '../../assets/lispy.png';
     </div>
     <pre><code>{`(define square (lambda (x) (* x x)))
 (square 9)
-; => 81
-
-(define i (interval-var 0))
-(define j (interval-var 1))
-
-(interval-meet i j)
-; => i ∧ j, normalised by the cubical builtins`}</code></pre>
+; => 81`}</code></pre>
   </div>
 </section>
 
@@ -63,11 +57,11 @@ import lispyImg from '../../assets/lispy.png';
   </a>
   <a href="/builtins/builtin/">
     <strong>Builtins</strong>
-    <span>Arithmetic, lists, strings, comparisons, cubical forms, and assembly.</span>
+    <span>Arithmetic, lists, strings, comparisons, and assembly.</span>
   </a>
   <a href="/lispy_lispu/">
     <strong>Lispy & Lispu</strong>
-    <span>The cubical cat and her puppy friend, guardians of the parentheses.</span>
+    <span>The pi-lisp mascots, guardians of the parentheses.</span>
   </a>
 </section>
 
@@ -77,10 +71,6 @@ import lispyImg from '../../assets/lispy.png';
   <Card title="Lisp at the surface" icon="seti:default">
     Write definitions, lambdas, conditionals, quotes, macros, lists, strings,
     integers, floats, booleans, and evaluator experiments using familiar parenthesized forms.
-  </Card>
-  <Card title="Cubical ideas inside" icon="puzzle">
-    Work with intervals, path types, composition, dependent functions,
-    dependent pairs, universes, variables, and Glue types.
   </Card>
   <Card title="Assembly when needed" icon="rocket">
     Use inline x86-64 NASM-style instruction lists or external assembly files
@@ -114,7 +104,7 @@ import lispyImg from '../../assets/lispy.png';
     <div class="mascot-info">
       <h3>Lispu <span class="mascot-tag">the puppy</span></h3>
       <p>
-        Lispy's enthusiastic companion. Lispu arrived when cubical types got
+        Lispy's enthusiastic companion. Lispu arrived when things got
         complicated — one paw raised, always ready to remind you that
         even dependent pairs can be fun.
       </p>
@@ -136,14 +126,9 @@ import lispyImg from '../../assets/lispy.png';
     description="Find the functions available in the global environment, grouped by category."
   />
   <LinkCard
-    title="Explore cubical builtins"
-    href="/builtins/cubical/"
-    description="Jump straight into intervals, paths, universes, dependent types, and cubical operations."
-  />
-  <LinkCard
     title="Meet Lispy & Lispu"
     href="/lispy_lispu/"
-    description="Read the story of pi-lisp's cubical cat and her puppy companion, and their purple syntax scarves."
+    description="Read the story of pi-lisp's mascots and their purple syntax scarves."
   />
   <LinkCard
     title="Embedding & Library Guide"
@@ -151,30 +136,6 @@ import lispyImg from '../../assets/lispy.png';
     description="Use pi-lisp as a Rust library crate — embed the interpreter in your own application."
   />
 </CardGrid>
-
-## Editor support
-
-<CardGrid>
-  <LinkCard
-    title="pi-lisp for VS Code"
-    href="https://marketplace.visualstudio.com/items?itemName=pi-lisp.pi-lisp"
-    description="Syntax highlighting, bracket matching, and language support for .pi files in Visual Studio Code."
-  />
-  <LinkCard
-    title="pi-lisp_cubical for VS Code"
-    href="https://marketplace.visualstudio.com/items?itemName=pi-lisp.pi-lisp-cubical"
-    description="Extended language support for .pic files — cubical type theory forms, paths, intervals, and dependent types."
-  />
-</CardGrid>
-
-<Aside type="note" title="File extensions">
-  pi-lisp uses two file extensions depending on which language features you need:
-
-  - **`.pi`** — standard pi-lisp source files (S-expressions, lambdas, macros, builtins, assembly).
-  - **`.pic`** — pi-lisp_cubical source files, for code that uses cubical type theory primitives such as intervals, path types, composition, Π-types, Σ-types, and Glue types.
-
-  File extension is autodetected — a `.pic` file is automatically run in cubical mode without needing a `--cubical` flag. Both extensions are recognised by their respective VS Code extensions above.
-</Aside>
 
 <Aside type="tip" title="Run the interpreter">
   Clone the interpreter repository and start it with Cargo:

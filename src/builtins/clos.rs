@@ -98,7 +98,6 @@ fn classify(expr: &Expr) -> String {
         Expr::List(_) => "null".to_string(),
         Expr::Func(_) | Expr::Lambda(..) => "function".to_string(),
         Expr::Macro(..) => "macro".to_string(),
-        Expr::CubicalTerm(_) => "cubical-term".to_string(),
     }
 }
 

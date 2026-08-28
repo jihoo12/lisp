@@ -563,29 +563,4 @@ mod tests {
         let res = eval_str("(- -9223372036854775808)", &mut heap, env);
         assert!(res.is_err());
     }
-
-    #[test]
-    fn test_eval_pic_integration() {
-        let mut heap = Heap::new();
-        let env = builtins::global_env(&mut heap);
-
-        let src = r#"(eval-pic "
-  data Bool =
-    | true : Bool
-    | false : Bool
-  def not : Bool -> Bool =
-    \\b. match b return Bool with
-      | true => false
-      | false => true
-")"#;
-        let res = eval_str(src, &mut heap, env).unwrap();
-        let list = match &res {
-            Expr::List(l) => l,
-            _ => panic!("expected list, got {:?}", res),
-        };
-        assert_eq!(list.len(), 3);
-        assert!(matches!(&list[0], Expr::Str(name) if name == "not"));
-        assert!(matches!(&list[1], Expr::CubicalTerm(_)));
-        assert!(matches!(&list[2], Expr::CubicalTerm(_)));
-    }
 }

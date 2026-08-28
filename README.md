@@ -1,6 +1,6 @@
 # pi-lisp
 
-A lightweight, experimental Lisp interpreter written in Rust. Beyond standard Lisp features (macros, lexical scoping, and arithmetic), this project features a unique **cubical type theory flavor**, including **Interval types, Path applications, Dependent Function types ($\Pi$-types), and Dependent Pair types ($\Sigma$-types)**.
+A lightweight, experimental Lisp interpreter written in Rust. Beyond standard Lisp features (macros, lexical scoping, and arithmetic), this project features **AOT compilation** and a **CLOS-style object system**.
 
 ## Quick Start
 
@@ -25,10 +25,7 @@ Run example files individually:
 
 ```bash
 cargo run --release hello.pi
-cargo run --release hello.pic
 cargo run --release test.pi
-cargo run --release test.pic
-cargo run --release examples.pic
 ```
 
 ## document

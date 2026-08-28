@@ -1,5 +1,4 @@
 pub mod builtins;
-pub mod cubical;
 pub mod env;
 pub mod eval;
 pub mod expr;

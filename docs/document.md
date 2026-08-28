@@ -45,7 +45,7 @@ my-symbol       ; symbol atom   → Expr::Symbol("my-symbol")
 
 ## 2 · Expression Types
 
-After scanning, `parse()` in `reader.rs` builds an `Expr` tree. There are ten variants (defined in `expr.rs`):
+After scanning, `parse()` in `reader.rs` builds an `Expr` tree. There are nine variants (defined in `expr.rs`):
 
 | Variant | Source syntax | Self-evaluates? |
 |---------|--------------|-----------------|
@@ -54,7 +54,6 @@ After scanning, `parse()` in `reader.rs` builds an `Expr` tree. There are ten va
 | `Complex(f64, f64)` | `1+2i`, `-3i`, `+i`, `-i` | ✅ yes |
 | `Bool(bool)` | `#t`, `#f` | ✅ yes |
 | `Str(String)` | `"hello"` | ✅ yes |
-| `CubicalTerm` | opaque — produced by cubical builtins | ✅ yes |
 | `Symbol(String)` | `x`, `my-var`, `+` | ❌ looks up name in the current environment |
 | `List(Vec<Expr>)` | `(f a b)`, `()` | ❌ evaluated as a call or special form; `()` is nil |
 | `Func` | built-in native function | ✅ yes (returned as-is) |
@@ -115,7 +114,7 @@ Produces a list template in which most sub-forms are left unevaluated, but `(unq
 
 Evaluates `cond`. If truthy, evaluates and returns `then`; otherwise evaluates and returns `else` (or `()` / nil when `else` is omitted).
 
-**Truthiness rules:** `#f` / `Bool(false)`, integer `0`, float `0.0`, the empty string `""`, and the empty list `()` are all falsy. Everything else — including every `Complex` and `CubicalTerm` — is truthy.
+**Truthiness rules:** `#f` / `Bool(false)`, integer `0`, float `0.0`, the empty string `""`, and the empty list `()` are all falsy. Everything else — including every `Complex` — is truthy.
 
 ```lisp
 (if (> x 0) "positive" "non-positive")

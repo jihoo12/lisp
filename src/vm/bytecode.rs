@@ -155,7 +155,6 @@ pub fn expr_to_value(expr: &Expr) -> Result<Value, String> {
             })
         }
         Expr::Macro(..) => Err("cannot convert macro to Value".into()),
-        Expr::CubicalTerm(_) => Err("uncompilable: CubicalTerm".into()),
     }
 }
 

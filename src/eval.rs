@@ -135,10 +135,6 @@ fn eval_step(expr: &Expr, env: Env, heap: &mut Heap) -> Result<Step, String> {
             Ok(Step::Value(expr.clone()))
         }
         Expr::Str(_) => Ok(Step::Value(expr.clone())),
-        // CubicalTerm values are opaque atoms — they self-evaluate just like
-        // numbers and are only inspected by the cubical builtins.
-        Expr::CubicalTerm(_) => Ok(Step::Value(expr.clone())),
-
         Expr::Symbol(s) => Ok(Step::Value(env_get(heap, env, s)?)),
 
         Expr::Func(_) | Expr::Lambda(..) | Expr::Macro(..) => Ok(Step::Value(expr.clone())),

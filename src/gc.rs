@@ -812,8 +812,7 @@ fn collect_lambda_envs(root: &Expr, out: &mut Vec<GcHandle>) {
             | Expr::Complex(_, _)
             | Expr::Bool(_)
             | Expr::Str(_)
-            | Expr::Func(_)
-            | Expr::CubicalTerm(_) => {}
+            | Expr::Func(_) => {}
         }
     }
 }

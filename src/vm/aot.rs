@@ -64,7 +64,7 @@ impl Writer {
                 self.w_u32(items.len() as u32);
                 for item in items { self.w_expr(item)?; }
             }
-            Expr::Func(_) | Expr::Lambda(..) | Expr::Macro(..) | Expr::CubicalTerm(_) => {
+            Expr::Func(_) | Expr::Lambda(..) | Expr::Macro(..) => {
                 return Err("Cannot serialize runtime-only Expr variant".into());
             }
         }

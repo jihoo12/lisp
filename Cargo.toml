@@ -11,5 +11,9 @@ path = "src/lib.rs"
 name = "pilisp"
 path = "src/main.rs"
 
+[[test]]
+name = "example_files"
+path = "test/example_files.rs"
+
 [dependencies]
 libc = "0.2.186"

@@ -219,9 +219,6 @@ impl ThreadValue {
             }
             Expr::Lambda(..) => Err("worker returned a lambda, which cannot cross threads".into()),
             Expr::Macro(..) => Err("worker returned a macro, which cannot cross threads".into()),
-            Expr::CubicalTerm(_) => {
-                Err("worker returned a cubical term, which cannot cross threads".into())
-            }
         }
     }
 

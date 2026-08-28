@@ -9,7 +9,6 @@ mod utils;
 
 use std::rc::Rc;
 
-use crate::cubical;
 use crate::env::{Env, new_env, env_set};
 use crate::expr::Expr;
 use crate::gc::Heap;
@@ -93,7 +92,6 @@ pub fn global_env(heap: &mut Heap) -> Env {
     utils::register_file(env, heap);
     utils::register_io(env, heap);
     utils::register_os(env, heap);
-    register_load_ctt(env, heap);
     cffi::register_ffi(env, heap);
     network::register_network(env, heap);
     #[cfg(target_arch = "x86_64")]
@@ -114,58 +112,6 @@ pub fn global_env(heap: &mut Heap) -> Env {
     register_aot(env, heap);
 
     env
-}
-
-fn register_load_ctt(env: Env, heap: &mut Heap) {
-    env_set(
-        heap,
-        env,
-        "ctt-load".into(),
-        Expr::Func(Rc::new(|args, _heap| {
-            if args.len() != 1 {
-                return Err(format!("ctt-load: expected 1 argument, got {}", args.len()));
-            }
-            let filename = match &args[0] {
-                Expr::Str(s) => s.clone(),
-                Expr::Symbol(s) => s.clone(),
-                other => {
-                    return Err(format!(
-                        "ctt-load: filename must be a string or symbol, got {:?}",
-                        other
-                    ));
-                }
-            };
-            let output = cubical::run(&filename).map_err(|e| e.to_string())?;
-            Ok(Expr::List(vec![
-                Expr::Str(output.name),
-                Expr::CubicalTerm(Box::new(output.ty)),
-                Expr::CubicalTerm(Box::new(output.value)),
-            ]))
-        })),
-    );
-
-    env_set(
-        heap,
-        env,
-        "eval-pic".into(),
-        Expr::Func(Rc::new(|args, _heap| {
-            if args.len() != 1 {
-                return Err(format!("eval-pic: expected 1 argument, got {}", args.len()));
-            }
-            let source = match &args[0] {
-                Expr::Str(s) => s.clone(),
-                other => return Err(format!(
-                    "eval-pic: argument must be a string, got {:?}", other
-                )),
-            };
-            let output = cubical::run_str(&source).map_err(|e| e.to_string())?;
-            Ok(Expr::List(vec![
-                Expr::Str(output.name),
-                Expr::CubicalTerm(Box::new(output.ty)),
-                Expr::CubicalTerm(Box::new(output.value)),
-            ]))
-        })),
-    );
 }
 
 fn register_aot(env: Env, heap: &mut Heap) {
