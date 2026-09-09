@@ -42,33 +42,6 @@ Reads a single byte from standard input. Returns an integer in `0–255`, or `-1
 
 ---
 
-### `raw-mode`
-
-Enables or disables **raw terminal mode** on Unix systems (a no-op on other platforms). In raw mode, input is available byte-by-byte without line buffering, echoing is disabled, and signal-generating characters (`^C`, `^\`, `^Z`) are passed through as data.
-
-```
-(raw-mode #t)   ;; enter raw mode
-(raw-mode #f)   ;; restore cooked (canonical) mode
-```
-
-> **Note:** Always restore cooked mode before your program exits, or the terminal may be left in an unusable state. The `raw-mode` builtin does **not** automatically restore mode on exit.
-
----
-
-### `terminal-size`
-
-Returns the terminal dimensions as a list `(rows cols)`. When not connected to a terminal (e.g. piped input), defaults to `(24 80)`.
-
-```
-(terminal-size)  →  (rows cols)
-```
-
-```lisp
-(terminal-size)  ;; → (24 80) for example
-```
-
----
-
 ### `exit`
 
 Terminates the process immediately with an optional exit code. Code defaults to `0` when omitted.

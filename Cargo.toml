@@ -3,10 +3,6 @@ name = "pilisp"
 version = "2.2.0"
 edition = "2024"
 
-[lib]
-name = "pilisp"
-path = "src/lib.rs"
-
 [[bin]]
 name = "pilisp"
 path = "src/main.rs"

@@ -1,13 +1,23 @@
+mod builtins;
+mod env;
+mod eval;
+mod expr;
+mod gc;
+mod helper;
+mod macros;
+mod reader;
+mod tinyasm;
+mod vm;
+
 use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 use std::process;
 
-use pilisp::eval::{eval, with_import_base};
-use pilisp::gc::{GcHandle, Heap};
-use pilisp::reader::parse_all;
-use pilisp::helper::shared_read_line;
-use pilisp::vm;
+use eval::{eval, with_import_base};
+use gc::{GcHandle, Heap};
+use reader::parse_all;
+use helper::shared_read_line;
 
 /// Parses and evaluates all expressions in `src`, printing each result.
 ///
@@ -100,7 +110,7 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     let mut heap = Heap::new();
-    let global_env = pilisp::builtins::global_env(&mut heap);
+    let global_env = builtins::global_env(&mut heap);
 
     if args.len() < 2 {
         repl(global_env, &mut heap);

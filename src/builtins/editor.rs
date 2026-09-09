@@ -68,36 +68,6 @@ pub fn register_terminal(env: Env, heap: &mut Heap) {
         })),
     );
 
-    // (raw-mode bool) — enable/disable raw terminal mode
-    // On non-Unix platforms this is a no-op (always succeeds).
-    env_set(
-        heap,
-        env,
-        "raw-mode".into(),
-        Expr::Func(Rc::new(|args, _heap| {
-            if args.len() != 1 {
-                return Err("raw-mode: expects 1 argument (#t or #f)".into());
-            }
-            let enable = matches!(&args[0], Expr::Bool(true));
-            set_raw_mode(enable).map_err(|e| format!("raw-mode: {}", e))?;
-            Ok(Expr::List(vec![]))
-        })),
-    );
-
-    // (terminal-size) → list (rows cols)
-    env_set(
-        heap,
-        env,
-        "terminal-size".into(),
-        Expr::Func(Rc::new(|args, _heap| {
-            if !args.is_empty() {
-                return Err("terminal-size: expects 0 arguments".into());
-            }
-            let (rows, cols) = terminal_size_impl().unwrap_or((24, 80));
-            Ok(Expr::List(vec![Expr::Int(rows), Expr::Int(cols)]))
-        })),
-    );
-
     // (exit [code]) — exit the process
     env_set(
         heap,
